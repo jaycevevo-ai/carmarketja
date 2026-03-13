@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-=6n7xv^dy@+6h!i#*hk#uvc_&g_1=4#v1td77fmxy5)zv2*i12
 DEBUG = False
 
 ALLOWED_HOSTS = [
-"carmarketja.onrender.com"   
+"carmarketja.onrender.com",   
  "127.0.0.1",
     "localhost",
     "carmarketja.com",
