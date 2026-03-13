@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Car Listings</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    padding:40px;
+}
+
+.car-card{
+    border:1px solid #ddd;
+    padding:20px;
+    margin-bottom:25px;
+    width:400px;
+}
+
+.car-card img{
+    width:100%;
+}
+
+.links a{
+    margin-right:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>My Car Listings</h1>
+
+<a href="{% url 'post_car' %}">Post New Car</a>
+
+<hr>
+
+{% if cars %}
+
+    {% for car in cars %}
+
+        <div class="car-card">
+
+            {% if car.image %}
+            <img src="{{ car.image.url }}">
+            {% endif %}
+
+            <h2>{{ car.title }}</h2>
+
+            <p>{{ car.year }} {{ car.make }} {{ car.model }}</p>
+
+            <p><strong>Price:</strong> J${{ car.price }}</p>
+
+            <div class="links">
+                <a href="{% url 'car_detail' car.id %}">View</a>
+                <a href="{% url 'edit_car' car.id %}">Edit</a>
+                <a href="{% url 'delete_car' car.id %}">Delete</a>
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+{% else %}
+
+<p>You have not posted any cars yet.</p>
+
+{% endif %}
+
+</body>
+</html>

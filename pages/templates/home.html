@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>CarMarketJA</title>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            margin:0;
+            background:#f5f5f5;
+            color:#222;
+        }
+
+        a{
+            text-decoration:none;
+            color:inherit;
+        }
+
+        .header{
+            background:white;
+            padding:10px 40px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom:1px solid #eee;
+            flex-wrap:wrap;
+            gap:15px;
+        }
+
+        .logo-wrap img{
+            height:90px;
+        }
+
+        .nav{
+            display:flex;
+            gap:25px;
+            font-weight:bold;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+
+        .nav a{
+            text-decoration:none;
+            color:#333;
+        }
+
+        .nav a:hover{
+            color:#f4b400;
+        }
+
+        .hero-banner{
+            background:#FFD700;
+            color:white;
+            padding:26px 40px;
+            font-size:24px;
+            font-weight:bold;
+        }
+
+        .page-wrap{
+            width:92%;
+            max-width:1280px;
+            margin:20px auto 40px auto;
+        }
+
+        .search-box{
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            padding:18px;
+            margin-bottom:18px;
+        }
+
+        .search-top{
+            display:grid;
+            grid-template-columns: 1.3fr 0.8fr 160px;
+            gap:12px;
+            margin-bottom:14px;
+        }
+
+        .search-top input,
+        .search-top select{
+            width:100%;
+            padding:14px 12px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            font-size:15px;
+            box-sizing:border-box;
+        }
+
+        .search-top button{
+            border:none;
+            background:#f4b400;
+            border-radius:8px;
+            font-size:18px;
+            font-weight:bold;
+            cursor:pointer;
+        }
+
+        .dealer-shortcuts{
+            display:grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap:12px;
+        }
+
+        .dealer-chip{
+            background:#fafafa;
+            border:1px solid #eee;
+            border-radius:8px;
+            padding:12px;
+            font-size:14px;
+            color:#555;
+        }
+
+        .category-grid{
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            padding:22px;
+            margin-bottom:28px;
+            display:grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap:18px 30px;
+        }
+
+        .category-item{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            font-size:18px;
+            font-weight:bold;
+            color:#333;
+            background:#fff;
+            padding:12px 14px;
+            border-radius:8px;
+            border:1px solid #eee;
+            transition:0.2s;
+        }
+
+        .category-item:hover{
+            background:#fafafa;
+            transform:translateY(-2px);
+        }
+
+        .category-icon{
+            font-size:28px;
+            width:36px;
+            text-align:center;
+        }
+
+        .section{
+            margin-top:28px;
+        }
+
+        .section h2{
+            font-size:20px;
+            margin-bottom:16px;
+        }
+
+        .car-row{
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+            gap:16px;
+        }
+
+        .car-card{
+            background:white;
+            border-radius:10px;
+            overflow:hidden;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .car-image-wrap{
+            position:relative;
+            cursor:pointer;
+        }
+
+        .car-image-wrap img{
+            width:100%;
+            height:165px;
+            object-fit:cover;
+            display:block;
+        }
+
+        .photo-count{
+            position:absolute;
+            top:8px;
+            right:8px;
+            background:rgba(0,0,0,0.7);
+            color:white;
+            font-size:12px;
+            padding:5px 8px;
+            border-radius:6px;
+        }
+
+        .car-info{
+            padding:12px;
+        }
+
+        .car-price{
+            font-size:22px;
+            font-weight:bold;
+            margin-bottom:6px;
+            color:#222;
+        }
+
+        .car-title{
+            font-size:18px;
+            font-weight:bold;
+            margin-bottom:4px;
+        }
+
+        .car-meta{
+            color:#666;
+            font-size:14px;
+            line-height:1.5;
+        }
+
+        .card-btn{
+            display:inline-block;
+            margin-top:10px;
+            background:#f4b400;
+            color:black;
+            padding:8px 12px;
+            border-radius:6px;
+            font-weight:bold;
+        }
+
+        .lightbox{
+            display:none;
+            position:fixed;
+            z-index:9999;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.88);
+            justify-content:center;
+            align-items:center;
+            padding:20px;
+            box-sizing:border-box;
+        }
+
+        .lightbox img{
+            max-width:92%;
+            max-height:85%;
+            border-radius:8px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.35);
+        }
+
+        .lightbox-close{
+            position:absolute;
+            top:20px;
+            right:30px;
+            font-size:40px;
+            color:white;
+            cursor:pointer;
+            font-weight:bold;
+            line-height:1;
+        }
+
+        .lightbox-nav{
+            position:absolute;
+            top:50%;
+            transform:translateY(-50%);
+            background:rgba(255,255,255,0.85);
+            border:none;
+            width:50px;
+            height:50px;
+            border-radius:50%;
+            font-size:28px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        .lightbox-prev{
+            left:25px;
+        }
+
+        .lightbox-next{
+            right:25px;
+        }
+
+        .lightbox-counter{
+            position:absolute;
+            bottom:25px;
+            color:white;
+            font-size:15px;
+            font-weight:bold;
+        }
+
+        @media (max-width: 1000px){
+            .dealer-shortcuts,
+            .category-grid{
+                grid-template-columns:repeat(2, 1fr);
+            }
+
+            .search-top{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width: 600px){
+            .dealer-shortcuts,
+            .category-grid{
+                grid-template-columns:1fr;
+            }
+
+            .header{
+                padding:14px 16px;
+            }
+
+            .page-wrap{
+                width:95%;
+            }
+
+            .hero-banner{
+                padding:20px 16px;
+                font-size:20px;
+            }
+
+            .logo-wrap img{
+                height:70px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-wrap">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="CarMarketJA">
+            </a>
+        </div>
+
+        <div class="nav">
+            <a href="{% url 'car_list' %}">Browse Cars</a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'post_car' %}">Post Car</a>
+                <a href="{% url 'saved_cars' %}">Saved Cars</a>
+                <a href="{% url 'my_cars' %}">My Cars</a>
+
+                {% if user.profile.is_dealer %}
+                    <a href="{% url 'dealer_dashboard' %}">Dealer Dashboard</a>
+                {% endif %}
+
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hero-banner">
+        Buy or Sell in minutes, No Hassle
+    </div>
+
+    <div class="page-wrap">
+
+        <div class="search-box">
+            <form method="GET" action="{% url 'car_list' %}">
+                <div class="search-top">
+                    <input type="text" name="q" placeholder="{{ total_ads }} ads near you">
+
+                    <select name="location">
+                        <option value="">All Jamaica</option>
+                        <option value="Kingston">Kingston</option>
+                        <option value="St Andrew">St Andrew</option>
+                        <option value="St Catherine">St Catherine</option>
+                        <option value="Clarendon">Clarendon</option>
+                        <option value="Manchester">Manchester</option>
+                        <option value="St Elizabeth">St Elizabeth</option>
+                        <option value="Westmoreland">Westmoreland</option>
+                        <option value="Hanover">Hanover</option>
+                        <option value="St James">St James</option>
+                        <option value="Trelawny">Trelawny</option>
+                        <option value="St Ann">St Ann</option>
+                        <option value="St Mary">St Mary</option>
+                        <option value="Portland">Portland</option>
+                        <option value="St Thomas">St Thomas</option>
+                    </select>
+
+                    <button type="submit">Search</button>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="category-grid">
+            <a href="{% url 'car_list' %}?category=cars" class="category-item">
+                <span class="category-icon">🚗</span> Cars
+            </a>
+
+            <a href="{% url 'car_list' %}?category=vans" class="category-item">
+                <span class="category-icon">🚐</span> Vans
+            </a>
+
+            <a href="{% url 'car_list' %}?category=buses" class="category-item">
+                <span class="category-icon">🚌</span> Buses
+            </a>
+
+            <a href="{% url 'car_list' %}?category=trucks" class="category-item">
+                <span class="category-icon">🚚</span> Trucks
+            </a>
+
+            <a href="{% url 'car_list' %}?category=motorbikes" class="category-item">
+                <span class="category-icon">🏍️</span> Motorbikes, scooters
+            </a>
+
+            <a href="{% url 'car_list' %}?category=parts" class="category-item">
+                <span class="category-icon">⚙️</span> Car parts, accessories
+            </a>
+
+            <a href="{% url 'car_list' %}?category=services" class="category-item">
+                <span class="category-icon">📊</span> Services
+            </a>
+
+            <a href="{% url 'car_list' %}?category=other" class="category-item">
+                <span class="category-icon">📦</span> Other
+            </a>
+        </div>
+
+        <div class="section">
+            <h2>PickUps For Sale</h2>
+            <div class="car-row">
+                {% for car in pickups %}
+                <div class="car-card">
+                    {% if car.image %}
+                    <div class="car-image-wrap"
+                         data-images="{% if car.image %}{{ car.image.url }}{% endif %}{% for photo in car.photos.all %}|{{ photo.image.url }}{% endfor %}"
+                         onclick="openGallery(this)">
+                        <img src="{{ car.image.url }}" alt="{{ car.title }}">
+                        <div class="photo-count">
+                            {% with total=car.photos.count %}
+                                {{ total|add:'1' }}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="car-info">
+                        <div class="car-price">J${{ car.price|floatformat:0 }}</div>
+                        <div class="car-title">{{ car.title }}</div>
+                        <div class="car-meta">{{ car.make }} {{ car.model }} {{ car.year }}</div>
+                        <a href="{% url 'car_detail' car.id %}" class="card-btn">View Details</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No pickup listings yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Latest Cars</h2>
+            <div class="car-row">
+                {% for car in latest_cars %}
+                <div class="car-card">
+                    {% if car.image %}
+                    <div class="car-image-wrap"
+                         data-images="{% if car.image %}{{ car.image.url }}{% endif %}{% for photo in car.photos.all %}|{{ photo.image.url }}{% endfor %}"
+                         onclick="openGallery(this)">
+                        <img src="{{ car.image.url }}" alt="{{ car.title }}">
+                        <div class="photo-count">
+                            {% with total=car.photos.count %}
+                                {{ total|add:'1' }}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="car-info">
+                        <div class="car-price">J${{ car.price|floatformat:0 }}</div>
+                        <div class="car-title">{{ car.title }}</div>
+                        <div class="car-meta">{{ car.make }} {{ car.model }} {{ car.year }}</div>
+                        <a href="{% url 'car_detail' car.id %}" class="card-btn">View Details</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No latest cars yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Cars Under J$1,000,000</h2>
+            <div class="car-row">
+                {% for car in cheap_cars %}
+                <div class="car-card">
+                    {% if car.image %}
+                    <div class="car-image-wrap"
+                         data-images="{% if car.image %}{{ car.image.url }}{% endif %}{% for photo in car.photos.all %}|{{ photo.image.url }}{% endfor %}"
+                         onclick="openGallery(this)">
+                        <img src="{{ car.image.url }}" alt="{{ car.title }}">
+                        <div class="photo-count">
+                            {% with total=car.photos.count %}
+                                {{ total|add:'1' }}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="car-info">
+                        <div class="car-price">J${{ car.price|floatformat:0 }}</div>
+                        <div class="car-title">{{ car.title }}</div>
+                        <div class="car-meta">{{ car.make }} {{ car.model }} {{ car.year }}</div>
+                        <a href="{% url 'car_detail' car.id %}" class="card-btn">View Details</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No cheap cars yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <div id="lightbox" class="lightbox">
+        <span class="lightbox-close" onclick="closeGallery()">&times;</span>
+        <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); prevImage()">&#10094;</button>
+        <img id="lightbox-image" src="" alt="Preview">
+        <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); nextImage()">&#10095;</button>
+        <div id="lightbox-counter" class="lightbox-counter"></div>
+    </div>
+
+    <script>
+        let currentGallery = [];
+        let currentIndex = 0;
+
+        function openGallery(element) {
+            const raw = element.getAttribute('data-images') || '';
+            currentGallery = raw.split('|').filter(Boolean);
+            currentIndex = 0;
+
+            if (currentGallery.length > 0) {
+                updateGalleryImage();
+                document.getElementById('lightbox').style.display = 'flex';
+            }
+        }
+
+        function updateGalleryImage() {
+            document.getElementById('lightbox-image').src = currentGallery[currentIndex];
+            document.getElementById('lightbox-counter').textContent = (currentIndex + 1) + ' / ' + currentGallery.length;
+        }
+
+        function prevImage() {
+            if (currentGallery.length === 0) return;
+            currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+            updateGalleryImage();
+        }
+
+        function nextImage() {
+            if (currentGallery.length === 0) return;
+            currentIndex = (currentIndex + 1) % currentGallery.length;
+            updateGalleryImage();
+        }
+
+        function closeGallery() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target.id === 'lightbox') {
+                closeGallery();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('lightbox').style.display === 'flex') {
+                if (e.key === 'ArrowLeft') prevImage();
+                if (e.key === 'ArrowRight') nextImage();
+                if (e.key === 'Escape') closeGallery();
+            }
+        });
+    </script>
+
+<a href="{% url 'configurator' %}" style="position:fixed; right:20px; bottom:20px; z-index:999; background:#1f8f42; color:white; padding:14px 18px; border-radius:999px; font-weight:bold; box-shadow:0 8px 18px rgba(0,0,0,0.18); text-decoration:none;">
+Build Your Car
+</a></body>
+</html>

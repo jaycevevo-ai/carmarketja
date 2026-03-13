@@ -1,0 +1,401 @@
+{% load static %}
+
+<div style="
+background:white;
+padding:12px 40px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+border-bottom:1px solid #eee;
+">
+
+<div style="display:flex;align-items:center;gap:20px;">
+
+<a href="{% url 'home' %}">
+<img src="{% static 'images/logo.png' %}" style="height:80px;">
+</a>
+
+<a href="{% url 'home' %}" style="
+font-weight:bold;
+font-size:18px;
+color:#333;
+text-decoration:none;
+">
+Home
+</a>
+
+</div>
+
+<div style="display:flex;gap:20px;font-weight:bold;">
+
+<a href="{% url 'car_list' %}">Browse Cars</a>
+
+{% if user.is_authenticated %}
+<a href="{% url 'post_car' %}">Post Car</a>
+<a href="{% url 'saved_cars' %}">Saved Cars</a>
+<a href="{% url 'my_cars' %}">My Cars</a>
+<a href="{% url 'dealer_dashboard' %}">Dealer Dashboard</a>
+<a href="{% url 'logout' %}">Logout</a>
+{% else %}
+<a href="{% url 'login' %}">Login</a>
+<a href="{% url 'register' %}">Register</a>
+{% endif %}
+
+</div>
+
+</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dealer Store</title>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f5f5f5;
+            margin:0;
+            padding:0;
+            color:#222;
+        }
+
+        .page-wrap{
+            width:92%;
+            max-width:1300px;
+            margin:25px auto;
+        }
+
+        .dealer-header{
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            padding:28px;
+            margin-bottom:20px;
+        }
+
+        .dealer-top{
+            display:grid;
+            grid-template-columns:160px 1fr 180px;
+            gap:24px;
+            align-items:start;
+        }
+
+        .dealer-logo-box{
+            width:150px;
+            height:120px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            background:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        }
+
+        .dealer-logo-box img{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            background:white;
+        }
+
+        .dealer-main h1{
+            margin:0 0 14px 0;
+            font-size:24px;
+        }
+
+        .dealer-meta{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+        }
+
+        .dealer-meta-item{
+            font-size:14px;
+            line-height:1.5;
+            color:#555;
+        }
+
+        .dealer-meta-item strong{
+            display:block;
+            color:#222;
+            margin-bottom:3px;
+            font-size:13px;
+        }
+
+        .dealer-side{
+            text-align:right;
+            font-size:13px;
+            color:#666;
+        }
+
+        .dealer-side strong{
+            display:block;
+            color:#222;
+            margin-bottom:4px;
+        }
+
+        .dealer-desc{
+            margin-top:18px;
+            padding-top:18px;
+            border-top:1px solid #eee;
+            font-size:14px;
+            color:#555;
+            line-height:1.6;
+        }
+
+        .dealer-tabs{
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom:20px;
+            display:flex;
+            gap:30px;
+            padding:16px 24px;
+            font-weight:bold;
+            color:#2e6f68;
+        }
+
+        .dealer-tabs span{
+            border-bottom:3px solid #2e6f68;
+            padding-bottom:8px;
+        }
+
+        .dealer-controls{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:18px;
+            font-size:14px;
+            color:#555;
+        }
+
+        .cars-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+            gap:20px;
+        }
+
+        .car-card{
+            background:white;
+            border-radius:10px;
+            overflow:hidden;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .car-image-wrap{
+            position:relative;
+        }
+
+        .car-card img{
+            width:100%;
+            height:190px;
+            object-fit:cover;
+            display:block;
+        }
+
+        .dealer-badge{
+            position:absolute;
+            top:10px;
+            left:10px;
+            background:#f4b400;
+            color:black;
+            font-weight:bold;
+            font-size:12px;
+            padding:6px 10px;
+            border-radius:5px;
+        }
+
+        .dealer-mini-logo{
+            position:absolute;
+            top:10px;
+            right:10px;
+            background:white;
+            border-radius:6px;
+            padding:6px;
+            width:72px;
+            height:42px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .dealer-mini-logo img{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+        }
+
+        .car-info{
+            padding:14px;
+        }
+
+        .car-price{
+            color:#0077cc;
+            font-size:24px;
+            font-weight:bold;
+            margin-bottom:8px;
+        }
+
+        .car-title{
+            font-size:18px;
+            font-weight:bold;
+            margin-bottom:6px;
+            color:#222;
+        }
+
+        .car-meta{
+            color:#666;
+            font-size:14px;
+            line-height:1.6;
+            margin-bottom:12px;
+        }
+
+        .btn{
+            display:inline-block;
+            background:#f4b400;
+            color:black;
+            text-decoration:none;
+            padding:10px 14px;
+            border-radius:6px;
+            font-weight:bold;
+        }
+
+        .empty-box{
+            background:white;
+            border-radius:10px;
+            padding:30px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        @media (max-width: 900px){
+            .dealer-top{
+                grid-template-columns:1fr;
+            }
+
+            .dealer-side{
+                text-align:left;
+            }
+
+            .dealer-meta{
+                grid-template-columns:1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+    <div class="dealer-header">
+        <div class="dealer-top">
+
+            <div class="dealer-logo-box">
+                {% if profile.dealer_logo %}
+                    <img src="{{ profile.dealer_logo.url }}" alt="{{ profile.dealer_name }}">
+                {% else %}
+                    <span>No Logo</span>
+                {% endif %}
+            </div>
+
+            <div class="dealer-main">
+                <h1>
+                    {% if profile.dealer_name %}
+                        {{ profile.dealer_name }}
+                    {% else %}
+                        {{ dealer_user.username }}
+                    {% endif %}
+                </h1>
+
+                <div class="dealer-meta">
+                    <div class="dealer-meta-item">
+                        <strong>Address</strong>
+                        {{ profile.location|default:"Not added yet" }}
+                    </div>
+
+                    <div class="dealer-meta-item">
+                        <strong>Website</strong>
+                        {% if profile.website %}
+                            <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a>
+                        {% else %}
+                            Not added yet
+                        {% endif %}
+                    </div>
+
+                    <div class="dealer-meta-item">
+                        <strong>Phone</strong>
+                        {{ profile.phone|default:"Not added yet" }}
+                    </div>
+
+                    <div class="dealer-meta-item">
+                        <strong>Email</strong>
+                        {{ profile.email|default:"Not added yet" }}
+                    </div>
+                </div>
+
+                <div class="dealer-desc">
+                    <strong>About Dealer:</strong><br>
+                    {{ profile.description|default:"No dealer description added yet." }}
+                </div>
+            </div>
+
+            <div class="dealer-side">
+                <strong>Posting since</strong>
+                {{ profile.created|date:"M, Y" }}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="dealer-tabs">
+        <span>All ads {{ car_count }}</span>
+        <span>Cars {{ car_count }}</span>
+    </div>
+
+    <div class="dealer-controls">
+        <div>Found {{ car_count }} adverts</div>
+    </div>
+
+    {% if cars %}
+    <div class="cars-grid">
+        {% for car in cars %}
+            <div class="car-card">
+
+                <div class="car-image-wrap">
+                    {% if car.image %}
+                        <img src="{{ car.image.url }}" alt="{{ car.title }}">
+                    {% endif %}
+
+                    <div class="dealer-badge">DEALER</div>
+
+                    {% if profile.dealer_logo %}
+                    <div class="dealer-mini-logo">
+                        <img src="{{ profile.dealer_logo.url }}" alt="{{ profile.dealer_name }}">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="car-info">
+                    <div class="car-price">J${{ car.price|floatformat:0 }}</div>
+                    <div class="car-title">{{ car.title }}</div>
+                    <div class="car-meta">
+                        {{ car.year }} {{ car.make }} {{ car.model }}<br>
+                        {{ car.transmission }}<br>
+                        {{ car.location }}
+                    </div>
+                    <a class="btn" href="{% url 'car_detail' car.id %}">View Details</a>
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-box">
+        No cars posted by this dealer yet.
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

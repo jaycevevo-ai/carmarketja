@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Car Configurator</title>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            margin:0;
+            background:#f5f5f5;
+            color:#222;
+        }
+
+        .header{
+            background:white;
+            padding:12px 30px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            border-bottom:1px solid #ddd;
+            position:sticky;
+            top:0;
+            z-index:1000;
+        }
+
+        .header img{
+            height:70px;
+        }
+
+        .header-links{
+            display:flex;
+            gap:20px;
+            font-weight:bold;
+            align-items:center;
+            flex-wrap:wrap;
+        }
+
+        .header-links a{
+            text-decoration:none;
+            color:#333;
+        }
+
+        .page-wrap{
+            width:92%;
+            max-width:1200px;
+            margin:30px auto;
+        }
+
+        .config-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:25px;
+        }
+
+        .config-box,
+        .preview-box{
+            background:white;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            padding:25px;
+        }
+
+        h1{
+            margin-top:0;
+        }
+
+        .form-group{
+            margin-bottom:16px;
+        }
+
+        .form-group label{
+            display:block;
+            font-weight:bold;
+            margin-bottom:6px;
+        }
+
+        .form-group select{
+            width:100%;
+            padding:12px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            font-size:15px;
+        }
+
+        .preview-card{
+            border:1px solid #eee;
+            border-radius:10px;
+            padding:20px;
+            background:#fafafa;
+        }
+
+        .preview-image-wrap{
+            width:100%;
+            height:300px;
+            border-radius:10px;
+            margin-bottom:16px;
+            background:linear-gradient(180deg,#f8f8f8,#ececec);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        }
+
+        .preview-image{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            display:block;
+        }
+
+        .car-name{
+            font-size:28px;
+            font-weight:bold;
+            margin-bottom:8px;
+        }
+
+        .car-spec{
+            font-size:16px;
+            color:#555;
+            margin-bottom:6px;
+        }
+
+        .price{
+            margin-top:18px;
+            font-size:28px;
+            font-weight:bold;
+            color:#0077cc;
+        }
+
+        .btn-row{
+            margin-top:20px;
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            display:inline-block;
+            background:#f4b400;
+            color:black;
+            padding:10px 16px;
+            border-radius:8px;
+            font-weight:bold;
+            text-decoration:none;
+            border:none;
+            cursor:pointer;
+        }
+
+        .saved-note{
+            margin-top:12px;
+            font-size:14px;
+            color:#1f8f42;
+            font-weight:bold;
+            display:none;
+        }
+
+        .floating-save-btn{
+            position:fixed;
+            right:20px;
+            bottom:20px;
+            z-index:999;
+            background:#1f8f42;
+            color:white;
+            border:none;
+            border-radius:999px;
+            padding:14px 20px;
+            font-size:15px;
+            font-weight:bold;
+            cursor:pointer;
+            box-shadow:0 8px 18px rgba(0,0,0,0.18);
+        }
+
+        @media (max-width: 900px){
+            .config-grid{
+                grid-template-columns:1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="CarMarketJA">
+        </a>
+
+        <div class="header-links">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'car_list' %}">Browse Cars</a>
+            <a href="{% url 'configurator' %}">Configurator</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'post_car' %}">Post Car</a>
+                <a href="{% url 'saved_cars' %}">Saved Cars</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-wrap">
+        <div class="config-grid">
+
+            <div class="config-box">
+                <h1>Build Your Car</h1>
+
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <select id="make" onchange="loadModels(); updatePreview(); saveConfigurator();"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <select id="model" onchange="updatePreview(); saveConfigurator();">
+                        <option value="">Select Model</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <select id="year" onchange="updatePreview(); saveConfigurator();">
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="color">Color</label>
+                    <select id="color" onchange="updatePreview(); saveConfigurator();">
+                        <option value="Black">Black</option>
+                        <option value="White">White</option>
+                        <option value="Silver">Silver</option>
+                        <option value="Red">Red</option>
+                        <option value="Blue">Blue</option>
+                        <option value="Gray">Gray</option>
+                        <option value="Green">Green</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="transmission">Transmission</label>
+                    <select id="transmission" onchange="updatePreview(); saveConfigurator();">
+                        <option value="Automatic">Automatic</option>
+                        <option value="Manual">Manual</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="fuel">Fuel Type</label>
+                    <select id="fuel" onchange="updatePreview(); saveConfigurator();">
+                        <option value="Gasoline">Gasoline</option>
+                        <option value="Diesel">Diesel</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="Electric">Electric</option>
+                    </select>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn" type="button" onclick="resetConfigurator()">Reset</button>
+                    <a href="{% url 'car_list' %}" class="btn">Browse Listings</a>
+                </div>
+
+                <div id="saved-note" class="saved-note">Configuration saved.</div>
+            </div>
+
+            <div class="preview-box">
+                <h1>Your Configuration</h1>
+
+                <div class="preview-card">
+                    <div class="preview-image-wrap">
+                        <img id="preview-image" class="preview-image" src="" alt="Car preview">
+                    </div>
+
+                    <div id="car-name" class="car-name">Select a Make</div>
+                    <div id="car-color" class="car-spec">Color: Black</div>
+                    <div id="car-transmission" class="car-spec">Transmission: Automatic</div>
+                    <div id="car-fuel" class="car-spec">Fuel: Gasoline</div>
+
+                    <div id="price" class="price">Estimated: J$0</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <button class="floating-save-btn" onclick="saveConfigurator()">Save Config</button>
+
+    <script>
+        const STORAGE_KEY = "carmarketja_configurator";
+
+        const allMakesModels = {
+            "Toyota": ["Corolla", "Axio", "Yaris", "Vitz", "Hilux", "Prado", "RAV4", "Crown", "Wish", "Probox", "Noah", "Voxy", "Fortuner"],
+            "Honda": ["Fit", "Civic", "Accord", "CR-V", "HR-V", "Vezel", "Stepwgn", "Stream", "Odyssey", "City"],
+            "Nissan": ["Note", "Tiida", "March", "Sunny", "Sylphy", "X-Trail", "Navara", "Wingroad", "Juke", "Teana", "Serena"],
+            "BMW": ["116i", "118i", "320i", "328i", "520i", "X1", "X3", "X5", "M3", "M4"],
+            "Mercedes": ["A180", "C180", "C200", "C300", "E200", "E300", "S450", "GLA", "GLC", "GLE"],
+            "Audi": ["A3", "A4", "A5", "A6", "Q3", "Q5", "Q7", "TT"],
+            "Hyundai": ["Tucson", "Elantra", "Accent", "Santa Fe", "Sonata", "Venue", "Creta"],
+            "Kia": ["Sportage", "Sorento", "Rio", "Cerato", "Seltos", "Picanto", "K5"],
+            "Suzuki": ["Swift", "Alto", "Vitara", "Jimny", "Baleno", "Ertiga"],
+            "Mazda": ["Demio", "Mazda3", "Mazda6", "CX-3", "CX-5", "CX-9", "BT-50"],
+            "Mitsubishi": ["Lancer", "ASX", "Outlander", "Pajero", "Mirage", "L200"],
+            "Volkswagen": ["Polo", "Golf", "Passat", "Jetta", "Tiguan", "Touareg"],
+            "Ford": ["Ranger", "Escape", "Explorer", "Focus", "Fiesta", "Everest"],
+            "Chevrolet": ["Cruze", "Malibu", "Spark", "Colorado", "Trailblazer"],
+            "Lexus": ["IS250", "ES300", "RX350", "NX200", "GX460", "LX570"],
+            "Subaru": ["Impreza", "Legacy", "Forester", "XV", "Outback", "WRX"],
+            "Land Rover": ["Defender", "Discovery", "Discovery Sport"],
+            "Range Rover": ["Evoque", "Velar", "Sport", "Vogue"],
+            "Infiniti": ["Q50", "QX50", "QX60", "FX35"],
+            "Acura": ["TSX", "TL", "MDX", "RDX"],
+            "Peugeot": ["208", "308", "3008", "5008"],
+            "Mini": ["Cooper", "Countryman", "Clubman"],
+            "Jeep": ["Wrangler", "Cherokee", "Grand Cherokee", "Compass"],
+            "Porsche": ["Cayenne", "Macan", "Panamera", "911"]
+        };
+
+        const makeBasePrice = {
+            Toyota: 3500000,
+            Honda: 3400000,
+            Nissan: 3300000,
+            BMW: 5500000,
+            Mercedes: 5900000,
+            Audi: 5200000,
+            Hyundai: 3100000,
+            Kia: 3000000,
+            Suzuki: 2800000,
+            Mazda: 3200000,
+            Mitsubishi: 3300000,
+            Volkswagen: 3700000,
+            Ford: 3600000,
+            Chevrolet: 3500000,
+            Lexus: 6000000,
+            Subaru: 3400000,
+            "Land Rover": 7200000,
+            "Range Rover": 8500000,
+            Infiniti: 5000000,
+            Acura: 4600000,
+            Peugeot: 3900000,
+            Mini: 4300000,
+            Jeep: 5800000,
+            Porsche: 9800000
+        };
+
+        const colorHex = {
+            Black: "#1f1f1f",
+            White: "#f8f8f8",
+            Silver: "#aeb6bf",
+            Red: "#c62828",
+            Blue: "#1565c0",
+            Gray: "#6d6d6d",
+            Green: "#2e7d32"
+        };
+
+        const suvModels = [
+            "Hilux", "Prado", "RAV4", "Fortuner", "CR-V", "HR-V", "Vezel", "X-Trail", "Navara",
+            "X1", "X3", "X5", "GLA", "GLC", "GLE", "Q3", "Q5", "Q7", "Tucson", "Santa Fe",
+            "Sportage", "Sorento", "CX-3", "CX-5", "CX-9", "Outlander", "ASX", "Pajero",
+            "Forester", "XV", "Defender", "Discovery", "Discovery Sport", "Evoque", "Velar",
+            "Sport", "Vogue", "QX50", "QX60", "MDX", "RDX", "3008", "5008", "Countryman",
+            "Wrangler", "Cherokee", "Grand Cherokee", "Compass", "Cayenne", "Macan", "Ranger",
+            "Explorer", "Escape", "Colorado", "Trailblazer", "GX460", "LX570", "BT-50", "L200", "Touareg", "Tiguan", "Everest"
+        ];
+
+        function createCarSvg(fillColor) {
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500">
+                    <rect width="900" height="500" fill="#f2f2f2"/>
+                    <ellipse cx="260" cy="400" rx="78" ry="78" fill="#222"/>
+                    <ellipse cx="640" cy="400" rx="78" ry="78" fill="#222"/>
+                    <ellipse cx="260" cy="400" rx="38" ry="38" fill="#bbb"/>
+                    <ellipse cx="640" cy="400" rx="38" ry="38" fill="#bbb"/>
+                    <path d="M150 320 L250 210 Q300 160 430 160 L610 160 Q690 160 740 250 L790 320 Q800 330 800 350 L800 365 Q800 385 780 385 L120 385 Q100 385 100 365 L100 340 Q100 325 120 320 Z"
+                          fill="${fillColor}" stroke="#444" stroke-width="8"/>
+                    <path d="M300 180 L420 180 L520 180 L620 180 Q665 180 700 250 L260 250 Q280 200 300 180 Z"
+                          fill="#8ec7ff" stroke="#3d6d99" stroke-width="6"/>
+                    <rect x="725" y="285" width="48" height="22" rx="8" fill="#ffe082"/>
+                    <rect x="118" y="285" width="48" height="22" rx="8" fill="#ffe082"/>
+                </svg>
+            `;
+            return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+        }
+
+        function loadMakes(selectedMake = "") {
+            const makeSelect = document.getElementById("make");
+            makeSelect.innerHTML = '<option value="">Select Make</option>';
+
+            Object.keys(allMakesModels).sort().forEach(function(make) {
+                const option = document.createElement("option");
+                option.value = make;
+                option.textContent = make;
+                makeSelect.appendChild(option);
+            });
+
+            if (selectedMake) {
+                makeSelect.value = selectedMake;
+            }
+        }
+
+        function loadModels(selectedModel = "") {
+            const make = document.getElementById("make").value;
+            const modelSelect = document.getElementById("model");
+
+            modelSelect.innerHTML = '<option value="">Select Model</option>';
+
+            if (!make || !allMakesModels[make]) {
+                updatePreview();
+                return;
+            }
+
+            allMakesModels[make].forEach(function(model) {
+                const option = document.createElement("option");
+                option.value = model;
+                option.textContent = model;
+                modelSelect.appendChild(option);
+            });
+
+            if (selectedModel) {
+                modelSelect.value = selectedModel;
+            }
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const make = document.getElementById("make").value;
+            const model = document.getElementById("model").value;
+            const year = document.getElementById("year").value;
+            const color = document.getElementById("color").value;
+            const transmission = document.getElementById("transmission").value;
+            const fuel = document.getElementById("fuel").value;
+
+            if (make && model) {
+                document.getElementById("car-name").textContent = year + " " + make + " " + model;
+            } else if (make) {
+                document.getElementById("car-name").textContent = year + " " + make;
+            } else {
+                document.getElementById("car-name").textContent = "Select a Make";
+            }
+
+            document.getElementById("car-color").textContent = "Color: " + color;
+            document.getElementById("car-transmission").textContent = "Transmission: " + transmission;
+            document.getElementById("car-fuel").textContent = "Fuel: " + fuel;
+
+            const fillColor = colorHex[color] || "#1f1f1f";
+            document.getElementById("preview-image").src = createCarSvg(fillColor);
+
+            let basePrice = makeBasePrice[make] || 3000000;
+
+            if (suvModels.includes(model)) {
+                basePrice += 1500000;
+            }
+
+            if (fuel === "Hybrid") {
+                basePrice += 500000;
+            }
+
+            if (fuel === "Electric") {
+                basePrice += 900000;
+            }
+
+            if (transmission === "Automatic") {
+                basePrice += 200000;
+            }
+
+            const yearDiff = parseInt(year) - 2020;
+            basePrice += yearDiff * 150000;
+
+            document.getElementById("price").textContent =
+                "Estimated: J$" + basePrice.toLocaleString();
+        }
+
+        function saveConfigurator() {
+            const config = {
+                make: document.getElementById("make").value,
+                model: document.getElementById("model").value,
+                year: document.getElementById("year").value,
+                color: document.getElementById("color").value,
+                transmission: document.getElementById("transmission").value,
+                fuel: document.getElementById("fuel").value
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+
+            const note = document.getElementById("saved-note");
+            note.style.display = "block";
+            clearTimeout(window.savedNoteTimer);
+            window.savedNoteTimer = setTimeout(function() {
+                note.style.display = "none";
+            }, 1500);
+        }
+
+        function loadConfigurator() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+
+            loadMakes();
+
+            if (!raw) {
+                document.getElementById("year").value = "2024";
+                document.getElementById("color").value = "Black";
+                document.getElementById("transmission").value = "Automatic";
+                document.getElementById("fuel").value = "Gasoline";
+                updatePreview();
+                return;
+            }
+
+            const config = JSON.parse(raw);
+
+            loadMakes(config.make || "");
+            if (config.year) document.getElementById("year").value = config.year;
+            if (config.color) document.getElementById("color").value = config.color;
+            if (config.transmission) document.getElementById("transmission").value = config.transmission;
+            if (config.fuel) document.getElementById("fuel").value = config.fuel;
+
+            loadModels(config.model || "");
+        }
+
+        function resetConfigurator() {
+            localStorage.removeItem(STORAGE_KEY);
+
+            loadMakes();
+            document.getElementById("model").innerHTML = '<option value="">Select Model</option>';
+            document.getElementById("year").value = "2024";
+            document.getElementById("color").value = "Black";
+            document.getElementById("transmission").value = "Automatic";
+            document.getElementById("fuel").value = "Gasoline";
+
+            updatePreview();
+        }
+
+        loadConfigurator();
+    </script>
+
+</body>
+</html>

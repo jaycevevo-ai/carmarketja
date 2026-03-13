@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>{{ car.title }}</title>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f5f5f5;
+            margin:0;
+            padding:0;
+        }
+
+        .topbar{
+            padding:15px;
+            background:white;
+            border-bottom:1px solid #ddd;
+        }
+
+        .page-wrap{
+            width:90%;
+            max-width:1100px;
+            margin:30px auto;
+        }
+
+        .car-box{
+            background:white;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            padding:25px;
+        }
+
+        .main-image-wrap{
+            position:relative;
+            cursor:zoom-in;
+            margin-bottom:15px;
+        }
+
+        .main-image{
+            width:100%;
+            max-height:520px;
+            object-fit:cover;
+            border-radius:8px;
+            display:block;
+        }
+
+        .zoom-badge{
+            position:absolute;
+            bottom:12px;
+            right:12px;
+            background:rgba(0,0,0,0.7);
+            color:white;
+            font-size:12px;
+            padding:6px 8px;
+            border-radius:4px;
+            pointer-events:none;
+        }
+
+        .thumb-row{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        }
+
+        .thumb{
+            width:120px;
+            height:85px;
+            object-fit:cover;
+            border-radius:6px;
+            cursor:pointer;
+            border:2px solid transparent;
+        }
+
+        .thumb.active{
+            border-color:#f4b400;
+        }
+
+        h1{
+            margin-top:0;
+            margin-bottom:10px;
+        }
+
+        .price{
+            font-size:28px;
+            font-weight:bold;
+            color:#0077cc;
+            margin-bottom:15px;
+        }
+
+        .details p{
+            margin:8px 0;
+            color:#444;
+        }
+
+        .action-btn{
+            display:inline-block;
+            background:#f4b400;
+            color:black;
+            padding:10px 16px;
+            border-radius:6px;
+            font-weight:bold;
+            text-decoration:none;
+            margin-top:10px;
+            margin-right:10px;
+        }
+
+        .lightbox{
+            display:none;
+            position:fixed;
+            z-index:9999;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,0.88);
+            justify-content:center;
+            align-items:center;
+            padding:20px;
+            box-sizing:border-box;
+        }
+
+        .lightbox img{
+            max-width:92%;
+            max-height:85%;
+            border-radius:8px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.35);
+        }
+
+        .lightbox-close{
+            position:absolute;
+            top:20px;
+            right:30px;
+            font-size:40px;
+            color:white;
+            cursor:pointer;
+            font-weight:bold;
+            line-height:1;
+        }
+
+        .lightbox-nav{
+            position:absolute;
+            top:50%;
+            transform:translateY(-50%);
+            background:rgba(255,255,255,0.85);
+            border:none;
+            width:50px;
+            height:50px;
+            border-radius:50%;
+            font-size:28px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        .lightbox-prev{
+            left:25px;
+        }
+
+        .lightbox-next{
+            right:25px;
+        }
+
+        .lightbox-counter{
+            position:absolute;
+            bottom:25px;
+            color:white;
+            font-size:15px;
+            font-weight:bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="{% url 'home' %}">
+        <img src="{% static 'images/logo.png' %}" alt="CarMarketJA" style="height:50px;">
+    </a>
+</div>
+
+<div class="page-wrap">
+    <div class="car-box">
+
+        <div class="main-image-wrap" id="main-image-wrap" onclick="openGalleryAt(currentIndex)">
+            {% if car.image %}
+                <img id="main-image" class="main-image" src="{{ car.image.url }}" alt="{{ car.title }}">
+                <div class="zoom-badge">Tap to enlarge</div>
+            {% endif %}
+        </div>
+
+        <div class="thumb-row">
+            {% if car.image %}
+                <img class="thumb active" src="{{ car.image.url }}" onclick="setMainImage(0, '{{ car.image.url }}', this)">
+            {% endif %}
+
+            {% for photo in car.photos.all %}
+                <img class="thumb" src="{{ photo.image.url }}" onclick="setMainImage({{ forloop.counter }}, '{{ photo.image.url }}', this)">
+            {% endfor %}
+        </div>
+
+        <h1>{{ car.year }} {{ car.make }} {{ car.model }}</h1>
+
+        {% if car.owner.profile.is_dealer %}
+            <p><strong>Dealer:</strong> {{ car.owner.profile.dealer_name }}</p>
+        {% else %}
+            <p><strong>Private Seller</strong></p>
+        {% endif %}
+
+        <div class="price">J${{ car.price|floatformat:0 }}</div>
+<a 
+href="https://wa.me/{{ car.owner.profile.phone|default:'18760000000' }}?text=Hi%20I%20am%20interested%20in%20the%20{{ car.year }}%20{{ car.make }}%20{{ car.model }}%20listed%20on%20CarMarketJA"
+target="_blank"
+class="action-btn"
+style="background:#25D366;color:white;"
+> 
+ContactSeller on WhatsApp
+</a>
+
+        {% if user.is_authenticated %}
+            {% if is_favorited %}
+                <a href="{% url 'toggle_favorite' car.id %}" class="action-btn">Remove from Saved Cars</a>
+            {% else %}
+                <a href="{% url 'toggle_favorite' car.id %}" class="action-btn">Save Car</a>
+            {% endif %}
+        {% endif %}
+
+        {% if car.owner.profile.is_dealer %}
+            <a href="{% url 'dealer_store' car.owner.username %}" class="action-btn">View Dealer Inventory</a>
+        {% endif %}
+
+        <div class="details">
+            <p><strong>Title:</strong> {{ car.title }}</p>
+            <p><strong>Make:</strong> {{ car.make }}</p>
+            <p><strong>Model:</strong> {{ car.model }}</p>
+            <p><strong>Year:</strong> {{ car.year }}</p>
+            <p><strong>Mileage:</strong> {{ car.mileage }}</p>
+            <p><strong>Transmission:</strong> {{ car.transmission }}</p>
+            <p><strong>Fuel Type:</strong> {{ car.fuel_type }}</p>
+            <p><strong>Color:</strong> {{ car.color }}</p>
+            <p><strong>Location:</strong> {{ car.location }}</p>
+            <p><strong>Description:</strong> {{ car.description }}</p>
+        </div>
+
+        <br>
+        <a href="/cars/">Back to Cars</a>
+
+    </div>
+</div>
+
+<div id="lightbox" class="lightbox">
+    <span class="lightbox-close" onclick="closeGallery()">&times;</span>
+    <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); prevImage()">&#10094;</button>
+    <img id="lightbox-image" src="" alt="Preview">
+    <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); nextImage()">&#10095;</button>
+    <div id="lightbox-counter" class="lightbox-counter"></div>
+</div>
+
+<script>
+let galleryImages = [
+    {% if car.image %}
+    "{{ car.image.url }}",
+    {% endif %}
+    {% for photo in car.photos.all %}
+    "{{ photo.image.url }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+galleryImages = galleryImages.filter(Boolean);
+
+let currentIndex = 0;
+
+function setMainImage(index, imageUrl, thumbElement) {
+    currentIndex = index;
+    document.getElementById('main-image').src = imageUrl;
+
+    document.querySelectorAll('.thumb').forEach(function(thumb) {
+        thumb.classList.remove('active');
+    });
+
+    thumbElement.classList.add('active');
+}
+
+function openGalleryAt(index) {
+    currentIndex = index;
+    updateGalleryImage();
+    document.getElementById('lightbox').style.display = 'flex';
+}
+
+function updateGalleryImage() {
+    document.getElementById('lightbox-image').src = galleryImages[currentIndex];
+    document.getElementById('lightbox-counter').textContent = (currentIndex + 1) + ' / ' + galleryImages.length;
+}
+
+function prevImage() {
+    if (galleryImages.length === 0) return;
+    currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+    updateGalleryImage();
+}
+
+function nextImage() {
+    if (galleryImages.length === 0) return;
+    currentIndex = (currentIndex + 1) % galleryImages.length;
+    updateGalleryImage();
+}
+
+function closeGallery() {
+    document.getElementById('lightbox').style.display = 'none';
+}
+
+document.getElementById('lightbox').addEventListener('click', function(e) {
+    if (e.target.id === 'lightbox') {
+        closeGallery();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('lightbox').style.display === 'flex') {
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'Escape') closeGallery();
+    }
+});
+</script>
+
+</body>
+</html>
